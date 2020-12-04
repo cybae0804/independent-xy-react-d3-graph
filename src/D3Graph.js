@@ -12,10 +12,9 @@ const margins = {
 
 export default class D3Graph extends React.Component {
   state = {
-    elements: null,
     size: {
-      width: 100,
-      height: 100,
+      width: 1,
+      height: 1,
     },
   };
 
@@ -39,15 +38,13 @@ export default class D3Graph extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (!equal(prevState.elements, this.state.elements)) {
-      this.redraw();
-    }
-
     if (!equal(prevState.size, this.state.size)) {
       this.initScales();
       this.initAxes();
       this.initZoom();
     }
+
+    this.redraw();
   }
 
   initScales() {
@@ -114,7 +111,21 @@ export default class D3Graph extends React.Component {
   }
 
   initData() {
-    this.setState({ elements: this.props.children(this.x, this.y) });
+    this.props.children({ xScale: this.x, yScale: this.y, size: this.state.size, margins })
+      .forEach(({ key, type, children }) => {
+        this[key] = d3.select(this.svgRef.current)
+          .append(type);
+
+        if (children) this.recursiveAppend(this[key], children);
+      });
+  }
+
+  recursiveAppend(selection, children) {
+    children.forEach(({ key, type, children }) => {
+      this[key] = selection.append(type);
+
+      if (children) this.recursiveAppend(this[key], children);
+    });
   }
 
   redraw() {
@@ -124,7 +135,37 @@ export default class D3Graph extends React.Component {
     this.gx().call(this.xAxis, xr);
     this.gy().call(this.yAxis, yr);
 
-    this.setState({ elements: this.props.children(xr, yr) })
+    this.props.children({ xScale: xr, yScale: yr, size: this.state.size, margins })
+      .forEach(({ attr, key, listeners, children }) => {
+        if (this[key]) {
+          if (attr) Object.entries(attr).forEach(([k, v]) => {
+            this[key].attr(k, v);
+          });
+
+          if (listeners) Object.entries(listeners).forEach(([k, v]) => {
+            this[key].on(k, e => v(e, xr.invert(e.clientX), yr.invert(e.clientY)));
+          });
+
+          if (children) this.recursiveAttr(children, xr, yr);
+        }
+      });
+  }
+
+  recursiveAttr(children, xr, yr) {
+    children.forEach(({ key, listeners, attr, children }) => {
+      const selection = this[key];
+      if (selection) {
+        if (attr) Object.entries(attr).forEach(([k, v]) => {
+          selection.attr(k, v);
+        });
+        
+        if (listeners) Object.entries(listeners).forEach(([k, v]) => {
+          selection.on(k, e => v(e, xr.invert(e.clientX), yr.invert(e.clientY)));
+        });
+      }
+
+      if (children) this.recursiveAttr(children, xr, yr);
+    });
   }
 
   zoomToX(domain) {
@@ -181,7 +222,6 @@ export default class D3Graph extends React.Component {
           >
             <g ref={this.xAxisRef} />
             <g ref={this.yAxisRef} />
-            {this.state.elements}
           </svg>
         </div>
       </ReactResizeDetector>

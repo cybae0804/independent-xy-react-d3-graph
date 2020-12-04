@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 import React, { createRef } from 'react';
 import * as d3 from 'd3';
 import equal from 'fast-deep-equal/react';
@@ -21,9 +22,6 @@ export default class D3Graph extends React.Component {
   svgRef = createRef();
   xAxisRef = createRef();
   yAxisRef = createRef();
-
-  gx = () => d3.select(this.xAxisRef.current);
-  gy = () => d3.select(this.yAxisRef.current);
 
   componentDidMount() {
     this.tx = () => d3.zoomTransform(this.gx().node());
@@ -49,6 +47,9 @@ export default class D3Graph extends React.Component {
     this.redraw();
   }
 
+  gx = () => d3.select(this.xAxisRef.current);
+  gy = () => d3.select(this.yAxisRef.current);
+
   initScales() {
     this.x = d3.scaleLinear()
       .domain(this.props.xDomain)
@@ -60,11 +61,11 @@ export default class D3Graph extends React.Component {
 
   initAxes() {
     this.xAxis = (g, scale) => g
-      .attr("transform", `translate(0,${this.y(0)})`)
+      .attr('transform', `translate(0,${this.y(0)})`)
       .call(d3.axisBottom(scale));
 
     this.yAxis = (g, scale) => g
-      .attr("transform", `translate(${this.x(0)},0)`)
+      .attr('transform', `translate(${this.x(0)},0)`)
       .call(d3.axisLeft(scale));
   }
 
@@ -73,14 +74,22 @@ export default class D3Graph extends React.Component {
 
     this.zoomX = d3.zoom()
       .scaleExtent([1, 10])
-      .translateExtent([[margins.left, margins.top], [this.state.size.width - margins.right, this.state.size.height - margins.bottom]])
-      .extent([[margins.left, margins.top], [this.state.size.width - margins.right, this.state.size.height - margins.bottom]]);
+      .translateExtent([
+        [margins.left, margins.top],
+        [this.state.size.width - margins.right, this.state.size.height - margins.bottom]])
+      .extent([
+        [margins.left, margins.top],
+        [this.state.size.width - margins.right, this.state.size.height - margins.bottom]]);
     this.zoomY = d3.zoom()
       .scaleExtent([1, 10])
-      .translateExtent([[margins.left, margins.top], [this.state.size.width - margins.right, this.state.size.height - margins.bottom]])
-      .extent([[margins.left, margins.top], [this.state.size.width - margins.right, this.state.size.height - margins.bottom]]);
+      .translateExtent([
+        [margins.left, margins.top],
+        [this.state.size.width - margins.right, this.state.size.height - margins.bottom]])
+      .extent([
+        [margins.left, margins.top],
+        [this.state.size.width - margins.right, this.state.size.height - margins.bottom]]);
 
-    this.zoom = d3.zoom().on("zoom", (e) => {
+    this.zoom = d3.zoom().on('zoom', (e) => {
       const t = e.transform;
       const k = t.k / this.z.k;
       const point = e.sourceEvent ? d3.pointer(e) : [this.state.size.width / 2, this.state.size.height / 2];
@@ -91,12 +100,12 @@ export default class D3Graph extends React.Component {
 
       if (k === 1) {
         // pure translation?
-        doX && this.gx().call(this.zoomX.translateBy, (t.x - this.z.x) / this.tx().k, 0);
-        doY && this.gy().call(this.zoomY.translateBy, 0, (t.y - this.z.y) / this.ty().k);
+        if (doX) this.gx().call(this.zoomX.translateBy, (t.x - this.z.x) / this.tx().k, 0);
+        if (doY) this.gy().call(this.zoomY.translateBy, 0, (t.y - this.z.y) / this.ty().k);
       } else {
         // if not, we're zooming on a fixed point
-        doX && this.gx().call(this.zoomX.scaleBy, k, point);
-        doY && this.gy().call(this.zoomY.scaleBy, k, point);
+        if (doX) this.gx().call(this.zoomX.scaleBy, k, point);
+        if (doY) this.gy().call(this.zoomY.scaleBy, k, point);
       }
 
       this.z = t;
@@ -104,8 +113,8 @@ export default class D3Graph extends React.Component {
       this.redraw();
     });
 
-    this.gx().call(this.zoomX).attr("pointer-events", "none");
-    this.gy().call(this.zoomY).attr("pointer-events", "none");
+    this.gx().call(this.zoomX).attr('pointer-events', 'none');
+    this.gy().call(this.zoomY).attr('pointer-events', 'none');
 
     d3.select(this.svgRef.current)
       .call(this.zoom)
@@ -113,7 +122,13 @@ export default class D3Graph extends React.Component {
   }
 
   initData() {
-    this.props.children({ xScale: this.x, yScale: this.y, size: this.state.size, margins, defaultClipPathId: this.defaultClipPathId })
+    this.props.children?.({
+      xScale: this.x,
+      yScale: this.y,
+      size: this.state.size,
+      margins,
+      defaultClipPathId: this.defaultClipPathId,
+    })
       .forEach(({ key, type, children }) => {
         this[key] = d3.select(this.svgRef.current)
           .append(type);
@@ -122,8 +137,8 @@ export default class D3Graph extends React.Component {
       });
   }
 
-  recursiveAppend(selection, children) {
-    children.forEach(({ key, type, children }) => {
+  recursiveAppend(selection, originalChildren) {
+    originalChildren.forEach(({ key, type, children }) => {
       this[key] = selection.append(type);
 
       if (children) this.recursiveAppend(this[key], children);
@@ -137,33 +152,47 @@ export default class D3Graph extends React.Component {
     this.gx().call(this.xAxis, xr);
     this.gy().call(this.yAxis, yr);
 
-    this.props.children({ xScale: xr, yScale: yr, size: this.state.size, margins, defaultClipPathId: this.defaultClipPathId })
+    this.props.children?.({
+      xScale: xr,
+      yScale: yr,
+      size: this.state.size,
+      margins,
+      defaultClipPathId: this.defaultClipPathId,
+    })
       .forEach(({ attr, key, listeners, children }) => {
         if (this[key]) {
-          if (attr) Object.entries(attr).forEach(([k, v]) => {
-            this[key].attr(k, v);
-          });
+          if (attr) {
+            Object.entries(attr).forEach(([k, v]) => {
+              this[key].attr(k, v);
+            });
+          }
 
-          if (listeners) Object.entries(listeners).forEach(([k, v]) => {
-            this[key].on(k, e => v(e, xr.invert(e.clientX), yr.invert(e.clientY)));
-          });
+          if (listeners) {
+            Object.entries(listeners).forEach(([k, v]) => {
+              this[key].on(k, e => v(e, xr.invert(e.clientX), yr.invert(e.clientY)));
+            });
+          }
 
           if (children) this.recursiveAttr(children, xr, yr);
         }
       });
   }
 
-  recursiveAttr(children, xr, yr) {
-    children.forEach(({ key, listeners, attr, children }) => {
+  recursiveAttr(originalChildren, xr, yr) {
+    originalChildren.forEach(({ key, listeners, attr, children }) => {
       const selection = this[key];
       if (selection) {
-        if (attr) Object.entries(attr).forEach(([k, v]) => {
-          selection.attr(k, v);
-        });
-        
-        if (listeners) Object.entries(listeners).forEach(([k, v]) => {
-          selection.on(k, e => v(e, xr.invert(e.clientX), yr.invert(e.clientY)));
-        });
+        if (attr) {
+          Object.entries(attr).forEach(([k, v]) => {
+            selection.attr(k, v);
+          });
+        }
+
+        if (listeners) {
+          Object.entries(listeners).forEach(([k, v]) => {
+            selection.on(k, e => v(e, xr.invert(e.clientX), yr.invert(e.clientY)));
+          });
+        }
       }
 
       if (children) this.recursiveAttr(children, xr, yr);
@@ -177,7 +206,7 @@ export default class D3Graph extends React.Component {
       domain[1] > this.props.xDomain[1] ? this.props.xDomain[1] : domain[1],
     ];
 
-    const scale = (this.state.size.width - margins.left - margins.right) / (this.x(d[1]) - this.x(d[0]))
+    const scale = (this.state.size.width - margins.left - margins.right) / (this.x(d[1]) - this.x(d[0]));
     this.gx().call(this.zoomX)
       .call(this.zoomX.transform, d3.zoomIdentity
         .scale(scale)
@@ -193,7 +222,7 @@ export default class D3Graph extends React.Component {
       domain[1] > this.props.yDomain[1] ? this.props.yDomain[1] : domain[1],
     ];
 
-    const scale = (this.state.size.height - margins.top - margins.bottom) / (this.y(d[1]) - this.y(d[0]))
+    const scale = (this.state.size.height - margins.top - margins.bottom) / (this.y(d[1]) - this.y(d[0]));
     this.gx().call(this.zoomY)
       .call(this.zoomY.transform, d3.zoomIdentity
         .scale(scale)
@@ -208,12 +237,13 @@ export default class D3Graph extends React.Component {
       <ReactResizeDetector
         handleWidth
         handleHeight
-        onResize={(width, height) => this.setState({ size: { width, height }})}
+        onResize={(width, height) => this.setState({ size: { width, height } })}
       >
         <div style={{
           width: '100%',
-          height: '100%'
-        }}>
+          height: '100%',
+        }}
+        >
           <svg
             ref={this.svgRef}
             style={{
@@ -225,7 +255,7 @@ export default class D3Graph extends React.Component {
             <g ref={this.xAxisRef} />
             <g ref={this.yAxisRef} />
             <clipPath id={this.defaultClipPathId}>
-              <rect 
+              <rect
                 width={this.state.size.width - margins.left - margins.right}
                 height={this.state.size.height - margins.top - margins.bottom}
                 transform={`translate(${margins.left},${margins.top})`}

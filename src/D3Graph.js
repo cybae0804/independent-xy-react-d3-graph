@@ -29,6 +29,8 @@ export default class D3Graph extends React.Component {
     this.tx = () => d3.zoomTransform(this.gx().node());
     this.ty = () => d3.zoomTransform(this.gy().node());
 
+    this.defaultClipPathId = `clip-path-${new Date().getTime()}`;
+
     this.initScales();
     this.initAxes();
     this.initZoom();
@@ -111,7 +113,7 @@ export default class D3Graph extends React.Component {
   }
 
   initData() {
-    this.props.children({ xScale: this.x, yScale: this.y, size: this.state.size, margins })
+    this.props.children({ xScale: this.x, yScale: this.y, size: this.state.size, margins, defaultClipPathId: this.defaultClipPathId })
       .forEach(({ key, type, children }) => {
         this[key] = d3.select(this.svgRef.current)
           .append(type);
@@ -135,7 +137,7 @@ export default class D3Graph extends React.Component {
     this.gx().call(this.xAxis, xr);
     this.gy().call(this.yAxis, yr);
 
-    this.props.children({ xScale: xr, yScale: yr, size: this.state.size, margins })
+    this.props.children({ xScale: xr, yScale: yr, size: this.state.size, margins, defaultClipPathId: this.defaultClipPathId })
       .forEach(({ attr, key, listeners, children }) => {
         if (this[key]) {
           if (attr) Object.entries(attr).forEach(([k, v]) => {
@@ -222,6 +224,13 @@ export default class D3Graph extends React.Component {
           >
             <g ref={this.xAxisRef} />
             <g ref={this.yAxisRef} />
+            <clipPath id={this.defaultClipPathId}>
+              <rect 
+                width={this.state.size.width - margins.left - margins.right}
+                height={this.state.size.height - margins.top - margins.bottom}
+                transform={`translate(${margins.left},${margins.top})`}
+              />
+            </clipPath>
           </svg>
         </div>
       </ReactResizeDetector>

@@ -22,7 +22,6 @@ export default class App extends React.Component {
 
             return (
               <path
-                key="main"
                 d={line([
                   { lap: 1, value: 10 },
                   { lap: 30, value: 50 },

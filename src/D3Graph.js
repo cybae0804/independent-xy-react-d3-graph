@@ -1,28 +1,27 @@
 import React, { createRef } from 'react';
 import * as d3 from 'd3';
 import equal from 'fast-deep-equal/react';
+import ReactResizeDetector from 'react-resize-detector';
 
 const margins = {
   left: 30,
-  right: 15,
-  top: 15,
-  bottom: 15,
-};
-
-const size = {
-  width: 500,
-  height: 500,
+  right: 30,
+  top: 30,
+  bottom: 30,
 };
 
 export default class D3Graph extends React.Component {
   state = {
     elements: null,
+    size: {
+      width: 100,
+      height: 100,
+    },
   };
 
   svgRef = createRef();
   xAxisRef = createRef();
   yAxisRef = createRef();
-  dataRef = createRef();
 
   gx = () => d3.select(this.xAxisRef.current);
   gy = () => d3.select(this.yAxisRef.current);
@@ -43,15 +42,21 @@ export default class D3Graph extends React.Component {
     if (!equal(prevState.elements, this.state.elements)) {
       this.redraw();
     }
+
+    if (!equal(prevState.size, this.state.size)) {
+      this.initScales();
+      this.initAxes();
+      this.initZoom();
+    }
   }
 
   initScales() {
     this.x = d3.scaleLinear()
       .domain(this.props.xDomain)
-      .range([margins.left, size.width - margins.right]);
+      .range([margins.left, this.state.size.width - margins.right]);
     this.y = d3.scaleLinear()
       .domain(this.props.yDomain)
-      .range([size.height - margins.bottom, margins.top]);
+      .range([this.state.size.height - margins.bottom, margins.top]);
   }
 
   initAxes() {
@@ -69,17 +74,17 @@ export default class D3Graph extends React.Component {
 
     this.zoomX = d3.zoom()
       .scaleExtent([1, 10])
-      .translateExtent([[margins.left, margins.top], [size.width - margins.right, size.height - margins.bottom]])
-      .extent([[margins.left, margins.top], [size.width - margins.right, size.height - margins.bottom]]);
+      .translateExtent([[margins.left, margins.top], [this.state.size.width - margins.right, this.state.size.height - margins.bottom]])
+      .extent([[margins.left, margins.top], [this.state.size.width - margins.right, this.state.size.height - margins.bottom]]);
     this.zoomY = d3.zoom()
       .scaleExtent([1, 10])
-      .translateExtent([[margins.left, margins.top], [size.width - margins.right, size.height - margins.bottom]])
-      .extent([[margins.left, margins.top], [size.width - margins.right, size.height - margins.bottom]]);
+      .translateExtent([[margins.left, margins.top], [this.state.size.width - margins.right, this.state.size.height - margins.bottom]])
+      .extent([[margins.left, margins.top], [this.state.size.width - margins.right, this.state.size.height - margins.bottom]]);
 
     this.zoom = d3.zoom().on("zoom", (e) => {
       const t = e.transform;
       const k = t.k / this.z.k;
-      const point = e.sourceEvent ? d3.pointer(e) : [size.width / 2, size.height / 2];
+      const point = e.sourceEvent ? d3.pointer(e) : [this.state.size.width / 2, this.state.size.height / 2];
 
       // is it on an axis?
       const doX = point[0] > this.x.range()[0];
@@ -129,7 +134,7 @@ export default class D3Graph extends React.Component {
       domain[1] > this.props.xDomain[1] ? this.props.xDomain[1] : domain[1],
     ];
 
-    const scale = (size.width - margins.left - margins.right) / (this.x(d[1]) - this.x(d[0]))
+    const scale = (this.state.size.width - margins.left - margins.right) / (this.x(d[1]) - this.x(d[0]))
     this.gx().call(this.zoomX)
       .call(this.zoomX.transform, d3.zoomIdentity
         .scale(scale)
@@ -145,8 +150,8 @@ export default class D3Graph extends React.Component {
       domain[1] > this.props.yDomain[1] ? this.props.yDomain[1] : domain[1],
     ];
 
-    const scale = (size.height - margins.top - margins.bottom) / (this.y(d[1]) - this.y(d[0]))
-    this.gx().call(this.zoomX)
+    const scale = (this.state.size.height - margins.top - margins.bottom) / (this.y(d[1]) - this.y(d[0]))
+    this.gx().call(this.zoomY)
       .call(this.zoomY.transform, d3.zoomIdentity
         .scale(scale)
         .translate(-this.y(d[0]) + (margins.left / scale), 0));
@@ -155,14 +160,31 @@ export default class D3Graph extends React.Component {
   }
 
   render() {
+    const { children, ref, xDomain, yDomain, ...rest } = this.props;
     return (
-      <svg ref={this.svgRef} style={{ width: '100%', height: '100%' }}>
-        <g ref={this.xAxisRef} />
-        <g ref={this.yAxisRef} />
-        <g ref={this.dataRef}>
-          {this.state.elements}
-        </g>
-      </svg>
+      <ReactResizeDetector
+        handleWidth
+        handleHeight
+        onResize={(width, height) => this.setState({ size: { width, height }})}
+      >
+        <div style={{
+          width: '100%',
+          height: '100%'
+        }}>
+          <svg
+            ref={this.svgRef}
+            style={{
+              width: '100%',
+              height: '100%',
+            }}
+            {...rest}
+          >
+            <g ref={this.xAxisRef} />
+            <g ref={this.yAxisRef} />
+            {this.state.elements}
+          </svg>
+        </div>
+      </ReactResizeDetector>
     );
   }
 }

@@ -42,7 +42,7 @@ export default class App extends React.Component {
           xDomain={[0, 100]}
           yDomain={[0, 100]}
         >
-          {({ xScale, yScale, size, margins, defaultClipPathId }) => { 
+          {({ xScale, yScale, size, defaultClipPathId }) => { 
             const line = d3.line()
               .x((d) => xScale?.(d.lap))
               .y((d) => yScale?.(d.value));

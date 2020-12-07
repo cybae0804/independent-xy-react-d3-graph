@@ -1,16 +1,10 @@
 /* eslint-disable no-unused-expressions */
 import React, { createRef } from 'react';
+import PropTypes from 'prop-types';
 import * as d3 from 'd3';
 import equal from 'fast-deep-equal';
 import ReactResizeDetector from 'react-resize-detector';
 import './index.css';
-
-const margins = {
-  left: 30,
-  right: 30,
-  top: 30,
-  bottom: 30,
-};
 
 export default class D3Graph extends React.Component {
   state = {
@@ -58,10 +52,10 @@ export default class D3Graph extends React.Component {
   initScales() {
     this.x = d3.scaleLinear()
       .domain(this.props.xDomain)
-      .range([margins.left, this.state.size.width - margins.right]);
+      .range([this.props.margins.left, this.state.size.width - this.props.margins.right]);
     this.y = d3.scaleLinear()
       .domain(this.props.yDomain)
-      .range([this.state.size.height - margins.bottom, margins.top]);
+      .range([this.state.size.height - this.props.margins.bottom, this.props.margins.top]);
   }
 
   initAxes() {
@@ -80,19 +74,19 @@ export default class D3Graph extends React.Component {
     this.zoomX = d3.zoom()
       .scaleExtent([1, 10])
       .translateExtent([
-        [margins.left, margins.top],
-        [this.state.size.width - margins.right, this.state.size.height - margins.bottom]])
+        [this.props.margins.left, this.props.margins.top],
+        [this.state.size.width - this.props.margins.right, this.state.size.height - this.props.margins.bottom]])
       .extent([
-        [margins.left, margins.top],
-        [this.state.size.width - margins.right, this.state.size.height - margins.bottom]]);
+        [this.props.margins.left, this.props.margins.top],
+        [this.state.size.width - this.props.margins.right, this.state.size.height - this.props.margins.bottom]]);
     this.zoomY = d3.zoom()
       .scaleExtent([1, 10])
       .translateExtent([
-        [margins.left, margins.top],
-        [this.state.size.width - margins.right, this.state.size.height - margins.bottom]])
+        [this.props.margins.left, this.props.margins.top],
+        [this.state.size.width - this.props.margins.right, this.state.size.height - this.props.margins.bottom]])
       .extent([
-        [margins.left, margins.top],
-        [this.state.size.width - margins.right, this.state.size.height - margins.bottom]]);
+        [this.props.margins.left, this.props.margins.top],
+        [this.state.size.width - this.props.margins.right, this.state.size.height - this.props.margins.bottom]]);
 
     this.zoom = d3.zoom().on('zoom', (e) => {
       const t = e.transform;
@@ -115,11 +109,7 @@ export default class D3Graph extends React.Component {
 
       this.z = t;
 
-      this.xr = this.tx().rescaleX(this.x);
-      this.yr = this.ty().rescaleY(this.y);
-
-      this.gx().call(this.xAxis, this.xr);
-      this.gy().call(this.yAxis, this.yr);
+      this.redraw();
 
       this.forceUpdate();
     });
@@ -147,11 +137,11 @@ export default class D3Graph extends React.Component {
       domain[1] > this.props.xDomain[1] ? this.props.xDomain[1] : domain[1],
     ];
 
-    const scale = (this.state.size.width - margins.left - margins.right) / (this.x(d[1]) - this.x(d[0]));
+    const scale = (this.state.size.width - this.props.margins.left - this.props.margins.right) / (this.x(d[1]) - this.x(d[0]));
     this.gx().call(this.zoomX)
       .call(this.zoomX.transform, d3.zoomIdentity
         .scale(scale)
-        .translate(-this.x(d[0]) + (margins.left / scale), 0));
+        .translate(-this.x(d[0]) + (this.props.margins.left / scale), 0));
 
     this.redraw();
   }
@@ -163,19 +153,17 @@ export default class D3Graph extends React.Component {
       domain[1] > this.props.yDomain[1] ? this.props.yDomain[1] : domain[1],
     ];
 
-    const scale = (this.state.size.height - margins.top - margins.bottom) / (this.y(d[1]) - this.y(d[0]));
+    const scale = (this.state.size.height - this.props.margins.top - this.props.margins.bottom) / (this.y(d[1]) - this.y(d[0]));
     this.gx().call(this.zoomY)
       .call(this.zoomY.transform, d3.zoomIdentity
         .scale(scale)
-        .translate(-this.y(d[0]) + (margins.left / scale), 0));
+        .translate(-this.y(d[0]) + (this.props.margins.left / scale), 0));
 
     this.redraw();
   }
 
   render() {
     const { children, ref, xDomain, yDomain, ...rest } = this.props;
-
-    console.log(this.props.xDomain[0], this?.xr?.(this.props.xDomain[0]), this?.x?.(this.props.xDomain[0]));
 
     return (
       <ReactResizeDetector
@@ -196,7 +184,6 @@ export default class D3Graph extends React.Component {
               height: '100%',
             }}
             {...rest}
-            // onMouseMove={(e) => console.log(e.clientX, e.clientY, e)}
           >
             <g
               ref={this.xAxisRef}
@@ -208,21 +195,20 @@ export default class D3Graph extends React.Component {
             />
             <clipPath id={this.defaultClipPathId}>
               <rect
-                width={this.state.size.width - margins.left - margins.right}
-                height={this.state.size.height - margins.top - margins.bottom}
-                transform={`translate(${margins.left},${margins.top})`}
+                width={this.state.size.width - this.props.margins.left - this.props.margins.right}
+                height={this.state.size.height - this.props.margins.top - this.props.margins.bottom}
+                transform={`translate(${this.props.margins.left},${this.props.margins.top})`}
               />
             </clipPath>
 
             {this.props.children({
               xScale: this.xr || this.x || d3.scaleLinear()
                 .domain(this.props.xDomain)
-                .range([margins.left, this.state.size.width - margins.right]),
+                .range([this.props.margins.left, this.state.size.width - this.props.margins.right]),
               yScale: this.yr || this.y || d3.scaleLinear()
                 .domain(this.props.yDomain)
-                .range([this.state.size.height - margins.bottom, margins.top]),
+                .range([this.state.size.height - this.props.margins.bottom, this.props.margins.top]),
               size: this.state.size,
-              margins,
               defaultClipPathId: this.defaultClipPathId,
             })}
           </svg>
@@ -230,4 +216,30 @@ export default class D3Graph extends React.Component {
       </ReactResizeDetector>
     );
   }
+}
+
+D3Graph.propTypes = {
+  xDomain: PropTypes.arrayOf(PropTypes.number).isRequired,
+  yDomain: PropTypes.arrayOf(PropTypes.number).isRequired,
+  onZoomXModified: PropTypes.func,
+  onZoomYModified: PropTypes.func,
+  children: PropTypes.func,
+  margins: PropTypes.shape({
+    top: PropTypes.number,
+    bottm: PropTypes.number,
+    left: PropTypes.number,
+    right: PropTypes.number,
+  })
+}
+
+D3Graph.defaultProps = {
+  onZoomXModified: () => {},
+  onZoomYModified: () => {},
+  children: () => { return []},
+  margins: {
+    top: 30,
+    bottm: 30,
+    left: 30,
+    right: 30,
+  },
 }

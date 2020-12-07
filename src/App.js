@@ -26,6 +26,7 @@ export default class App extends React.Component {
       { lap: 90, value: 67 },
       { lap: 80, value: 56 },
       { lap: 60, value: 23 },
+      { lap: 0, value: 100 }
     ] });
   }
 
@@ -35,7 +36,7 @@ export default class App extends React.Component {
 
   render() {
     return (
-      <div className="App">
+      <div className="App" style={{ position: 'relative', top: 50, left: 50}}>
         <D3Graph
           ref={this.graphRef}
           xDomain={[0, 100]}
@@ -47,22 +48,14 @@ export default class App extends React.Component {
               .y((d) => yScale?.(d.value));
 
             return (
-              [
-                {
-                  key: 'test',
-                  type: 'path',
-                  attr: {
-                    'clip-path': `url(#${defaultClipPathId})`,
-                    d: line(this.state.data ?? []),
-                    stroke: "black",
-                    fill: "none",
-                    'stroke-width': 1,
-                  },
-                  listeners: {
-                    mouseover: console.log,
-                  },
-                },
-            ]);
+              <path
+                fill="none"
+                d={line(this.state.data)}
+                stroke="black"
+                clipPath={`url(#${defaultClipPathId})`}
+                onMouseMove={e => console.log(e.clientX - e.currentTarget.getBoundingClientRect().left, e.clientY - e.currentTarget.getBoundingClientRect().top)}
+            />  
+            );
           }}
         </D3Graph>
 

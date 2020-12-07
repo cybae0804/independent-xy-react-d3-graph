@@ -1,8 +1,9 @@
 /* eslint-disable no-unused-expressions */
 import React, { createRef } from 'react';
 import * as d3 from 'd3';
-import equal from 'fast-deep-equal/react';
+import equal from 'fast-deep-equal';
 import ReactResizeDetector from 'react-resize-detector';
+import './index.css';
 
 const margins = {
   left: 30,
@@ -14,8 +15,8 @@ const margins = {
 export default class D3Graph extends React.Component {
   state = {
     size: {
-      width: 1,
-      height: 1,
+      width: 100,
+      height: 100,
     },
   };
 
@@ -24,15 +25,11 @@ export default class D3Graph extends React.Component {
   yAxisRef = createRef();
 
   componentDidMount() {
-    this.tx = () => d3.zoomTransform(this.gx().node());
-    this.ty = () => d3.zoomTransform(this.gy().node());
-
     this.defaultClipPathId = `clip-path-${new Date().getTime()}`;
 
     this.initScales();
     this.initAxes();
     this.initZoom();
-    this.initData();
 
     this.redraw();
   }
@@ -44,11 +41,19 @@ export default class D3Graph extends React.Component {
       this.initZoom();
     }
 
+    if (!equal(prevProps.xDomain, this.props.xDomain) || !equal(prevProps.yDomain, this.props.yDomain)) {
+      this.initScales();
+      this.initAxes();
+      this.initZoom();
+    }
+
     this.redraw();
   }
 
   gx = () => d3.select(this.xAxisRef.current);
   gy = () => d3.select(this.yAxisRef.current);
+  tx = () => d3.zoomTransform(this.gx().node());
+  ty = () => d3.zoomTransform(this.gy().node());
 
   initScales() {
     this.x = d3.scaleLinear()
@@ -61,11 +66,11 @@ export default class D3Graph extends React.Component {
 
   initAxes() {
     this.xAxis = (g, scale) => g
-      .attr('transform', `translate(0,${this.y(0)})`)
+      .attr('transform', `translate(0,${this.y(this.props.yDomain[0])})`)
       .call(d3.axisBottom(scale));
 
     this.yAxis = (g, scale) => g
-      .attr('transform', `translate(${this.x(0)},0)`)
+      .attr('transform', `translate(${this.x(this.props.xDomain[0])},0)`)
       .call(d3.axisLeft(scale));
   }
 
@@ -110,93 +115,29 @@ export default class D3Graph extends React.Component {
 
       this.z = t;
 
-      this.redraw();
+      this.xr = this.tx().rescaleX(this.x);
+      this.yr = this.ty().rescaleY(this.y);
+
+      this.gx().call(this.xAxis, this.xr);
+      this.gy().call(this.yAxis, this.yr);
+
+      this.forceUpdate();
     });
 
-    this.gx().call(this.zoomX).attr('pointer-events', 'none');
-    this.gy().call(this.zoomY).attr('pointer-events', 'none');
+    this.gx().call(this.zoomX);
+    this.gy().call(this.zoomY);
 
     d3.select(this.svgRef.current)
       .call(this.zoom)
       .call(this.zoom.transform, d3.zoomIdentity.scale(1));
   }
 
-  initData() {
-    this.props.children?.({
-      xScale: this.x,
-      yScale: this.y,
-      size: this.state.size,
-      margins,
-      defaultClipPathId: this.defaultClipPathId,
-    })
-      .forEach(({ key, type, children }) => {
-        this[key] = d3.select(this.svgRef.current)
-          .append(type);
-
-        if (children) this.recursiveAppend(this[key], children);
-      });
-  }
-
-  recursiveAppend(selection, originalChildren) {
-    originalChildren.forEach(({ key, type, children }) => {
-      this[key] = selection.append(type);
-
-      if (children) this.recursiveAppend(this[key], children);
-    });
-  }
-
   redraw() {
-    const xr = this.tx().rescaleX(this.x);
-    const yr = this.ty().rescaleY(this.y);
+    this.xr = this.tx().rescaleX(this.x);
+    this.yr = this.ty().rescaleY(this.y);
 
-    this.gx().call(this.xAxis, xr);
-    this.gy().call(this.yAxis, yr);
-
-    this.props.children?.({
-      xScale: xr,
-      yScale: yr,
-      size: this.state.size,
-      margins,
-      defaultClipPathId: this.defaultClipPathId,
-    })
-      .forEach(({ attr, key, listeners, children }) => {
-        if (this[key]) {
-          if (attr) {
-            Object.entries(attr).forEach(([k, v]) => {
-              this[key].attr(k, v);
-            });
-          }
-
-          if (listeners) {
-            Object.entries(listeners).forEach(([k, v]) => {
-              this[key].on(k, e => v(e, xr.invert(e.clientX), yr.invert(e.clientY)));
-            });
-          }
-
-          if (children) this.recursiveAttr(children, xr, yr);
-        }
-      });
-  }
-
-  recursiveAttr(originalChildren, xr, yr) {
-    originalChildren.forEach(({ key, listeners, attr, children }) => {
-      const selection = this[key];
-      if (selection) {
-        if (attr) {
-          Object.entries(attr).forEach(([k, v]) => {
-            selection.attr(k, v);
-          });
-        }
-
-        if (listeners) {
-          Object.entries(listeners).forEach(([k, v]) => {
-            selection.on(k, e => v(e, xr.invert(e.clientX), yr.invert(e.clientY)));
-          });
-        }
-      }
-
-      if (children) this.recursiveAttr(children, xr, yr);
-    });
+    this.gx().call(this.xAxis, this.xr);
+    this.gy().call(this.yAxis, this.yr);
   }
 
   zoomToX(domain) {
@@ -233,16 +174,20 @@ export default class D3Graph extends React.Component {
 
   render() {
     const { children, ref, xDomain, yDomain, ...rest } = this.props;
+
+    console.log(this.props.xDomain[0], this?.xr?.(this.props.xDomain[0]), this?.x?.(this.props.xDomain[0]));
+
     return (
       <ReactResizeDetector
         handleWidth
         handleHeight
         onResize={(width, height) => this.setState({ size: { width, height } })}
       >
-        <div style={{
-          width: '100%',
-          height: '100%',
-        }}
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+          }}
         >
           <svg
             ref={this.svgRef}
@@ -251,9 +196,16 @@ export default class D3Graph extends React.Component {
               height: '100%',
             }}
             {...rest}
+            // onMouseMove={(e) => console.log(e.clientX, e.clientY, e)}
           >
-            <g ref={this.xAxisRef} />
-            <g ref={this.yAxisRef} />
+            <g
+              ref={this.xAxisRef}
+              pointerEvents="none"
+            />
+            <g
+              ref={this.yAxisRef}
+              pointerEvents="none"
+            />
             <clipPath id={this.defaultClipPathId}>
               <rect
                 width={this.state.size.width - margins.left - margins.right}
@@ -261,6 +213,18 @@ export default class D3Graph extends React.Component {
                 transform={`translate(${margins.left},${margins.top})`}
               />
             </clipPath>
+
+            {this.props.children({
+              xScale: this.xr || this.x || d3.scaleLinear()
+                .domain(this.props.xDomain)
+                .range([margins.left, this.state.size.width - margins.right]),
+              yScale: this.yr || this.y || d3.scaleLinear()
+                .domain(this.props.yDomain)
+                .range([this.state.size.height - margins.bottom, margins.top]),
+              size: this.state.size,
+              margins,
+              defaultClipPathId: this.defaultClipPathId,
+            })}
           </svg>
         </div>
       </ReactResizeDetector>

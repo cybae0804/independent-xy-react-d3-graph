@@ -3,6 +3,10 @@
   "version": "0.1.1",
   "license": "MIT",
   "main": "./lib/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cybae0804/independent-xy-react-d3-graph"
+  },
   "dependencies": {
     "d3-axis": "^2.0.0",
     "d3-scale": "^3.2.3",

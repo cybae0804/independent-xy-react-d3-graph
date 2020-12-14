@@ -1,70 +1,76 @@
-# Getting Started with Create React App
+# Independent XY React D3 Graph
+Out of the box solution for independent X Y zooming graph.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Features
+- Built in independent XY axis zooming through hovering on the axis
+- Responsive - Built in resize detector
+- Use JSX to create graph elements and automatically rerender when needed
+- Programmatic zoom with a ref
 
-## Available Scripts
+## Setup
+```bash
+$ npm i independent-xy-react-d3-graph
+```
 
-In the project directory, you can run:
+```javascript
+import Graph from 'independent-xy-react-d3-graph';
+```
 
-### `npm start`
+```javascript
+<Graph {...props}>
+  {...children}
+</Graph>
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## Usage
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### Rendering Elements
+The goal of this Graph component was to mix the customizability of svg elements through D3 and the ease of composability through JSX. In order to achieve this, the Graph component works as a HOC that returns a function with certain properties. For example: 
 
-### `npm test`
+```javascript
+<Graph>
+  {({ xScale, yScale, size, defaultClipPathId }) => {
+    return elements;
+  }
+</Graph>
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+As the zoom state or the size changes within the graph, it will pass the `xScale`, `yScxale` and a few other state to the user. Then, these functions and state can be used to modify the positioning of the desired elements while staying synchronized to the zoom state. 
 
-### `npm run build`
+The callback function can return a single JSX element or an array. Note that when an array is used, each element needs to have a key prop just like any other React array rendering.
+| Name | Type | Desc |
+|-------------------|-----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| xScale            | d3.scaleLinear()                  | Function that scales with the Graph's X axis zoom state.                                                                                    |
+| yScale            | d3.scaleLinear()                  | Function that scales with the Graph's Y axis zoom state.                                                                                    |
+| size              | { <br /> width: number, <br /> height: number <br /> } | Object defining the size of the Graph component.                                                                                            |
+| defaultClipPathId | string                            | ID of the built in `clipPath` element. The bounds are within the displayed axes. This ID is set with the time component upon component mount. |
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Accessing Graph Zoom Functions
+To programmatically modify the zoom state of the Graph component, the user can access the Graph properties through the use of a ref. In order to do so, pass a ref into the Graph component. 
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```javascript
+<Graph ref={this.graphRef}>
+  {({ xScale, yScale, size, defaultClipPathId }) => {
+    return elements;
+  }
+</Graph>
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```javascript
+this.graphRef.current.zoomToX(newYDomain);
+this.graphRef.current.zoomToY(newXDomain);
+```
 
-### `npm run eject`
+Probably the most useful functions `zoomToX` and `zoomToY` receive an array of numbers: the desired zoom domain. Ex. `[80, 200]`. 
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+These functiosn trigger the domain modified callback functions without the `userAction` set to true.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Props
+| Name              | Type                                                         | Required | Desc                                                                                                                                                                        |
+|-------------------|--------------------------------------------------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| xDomain           | [number, number]                                             | true     | Initial domain for the X axis. Also works as the max limit on zoom.                                                                                                         |
+| yDomain           | [number, number]                                             | true     | Initial domain for the Y axis. Also works as the max limit on zoom.                                                                                                         |
+| margins           | { <br /> top: number, <br /> bottom: number, <br /> left: number, <br /> right: number <br /> } | true     | Defines the space the Graph should not invade. Allows the axis to render in this space.                                                                                     |
+| onXDomainModified | (domain: [number, number], userAction: boolean) => void;     | false    | Callback function that receives the new domain after zoom. If the user scrolled to zoom, userAction is true, while any programmatic zoom sends false.                       |
+| onYDomainModified | (domain: [number, number], userAction: boolean) => void;     | false    | "                                                                                                                                                                           |
+| wrapperElements   | React.Element[]                                              | false    | Elements to be rendered outside of the svg component. Instead, it renders inside an absolutely positioned div, which allows for easier rendering of tooltips, legends, etc. |

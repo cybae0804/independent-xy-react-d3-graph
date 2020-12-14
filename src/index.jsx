@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-expressions */
 import React, { createRef } from 'react';
 import { scaleLinear } from 'd3-scale';
 import { select, pointer } from 'd3-selection';

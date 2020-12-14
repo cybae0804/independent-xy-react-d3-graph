@@ -35,7 +35,7 @@ The goal of this Graph component was to mix the customizability of svg elements 
 </Graph>
 ```
 
-As the zoom state or the size changes within the graph, it will pass the `xScale`, `yScxale` and a few other state to the user. Then, these functions and state can be used to modify the positioning of the desired elements while staying synchronized to the zoom state. 
+As the zoom state or the size changes within the graph, it will pass the `xScale`, `yScale` and a few other state to the user. Then, these functions and state can be used to modify the positioning of the desired elements while staying synchronized to the zoom state. 
 
 The callback function can return a single JSX element or an array. Note that when an array is used, each element needs to have a key prop just like any other React array rendering.
 | Name | Type | Desc |

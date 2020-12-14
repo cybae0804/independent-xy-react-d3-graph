@@ -197,7 +197,7 @@ export default class D3Graph extends React.Component {
 
   render() {
     const {
-      children, ref, xDomain, yDomain, margins, tooltip,
+      children, ref, xDomain, yDomain, margins, wrapperElements,
       onXDomainModified, onYDomainModified, onMouseMove,
       onClick, ...rest
     } = this.props;
@@ -261,7 +261,7 @@ export default class D3Graph extends React.Component {
             pointerEvents: 'none',
           }}
           >
-            {tooltip}
+            {wrapperElements}
           </div>
         </div>
       </ReactResizeDetector>

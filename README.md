@@ -31,7 +31,7 @@ The goal of this Graph component was to mix the customizability of svg elements 
 <Graph>
   {({ xScale, yScale, size, defaultClipPathId }) => {
     return elements;
-  }
+  }}
 </Graph>
 ```
 
@@ -57,8 +57,8 @@ To programmatically modify the zoom state of the Graph component, the user can a
 ```
 
 ```javascript
-this.graphRef.current.zoomToX(newYDomain);
-this.graphRef.current.zoomToY(newXDomain);
+this.graphRef.current.zoomToX(newXDomain);
+this.graphRef.current.zoomToY(newYDomain);
 ```
 
 Probably the most useful functions `zoomToX` and `zoomToY` receive an array of numbers: the desired zoom domain. Ex. `[80, 200]`. 

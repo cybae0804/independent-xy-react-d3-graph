@@ -52,7 +52,7 @@ To programmatically modify the zoom state of the Graph component, the user can a
 <Graph ref={this.graphRef}>
   {({ xScale, yScale, size, defaultClipPathId }) => {
     return elements;
-  }
+  }}
 </Graph>
 ```
 

@@ -6,7 +6,7 @@ import { axisBottom, axisLeft } from 'd3-axis';
 import equal from 'fast-deep-equal';
 import ReactResizeDetector from 'react-resize-detector';
 
-export default class D3Graph extends React.Component {
+export default class Graph extends React.Component {
   state = {
     size: {
       width: 100,
@@ -165,12 +165,12 @@ export default class D3Graph extends React.Component {
       domain[1] > this.props.yDomain[1] ? this.props.yDomain[1] : domain[1],
     ];
 
-    const scale = (this.state.size.height - this.props.margins.top - this.props.margins.bottom)
-      / (this.y(d[1]) - this.y(d[0]));
-    this.gx().call(this.zoomY)
+    const scale = (this.state.size.height - this.props.margins.bottom - this.props.margins.top)
+      / (this.y(d[0]) - this.y(d[1]));
+    this.gy().call(this.zoomY)
       .call(this.zoomY.transform, zoomIdentity
         .scale(scale)
-        .translate(-this.y(d[0]) + (this.props.margins.left / scale), 0));
+        .translate(0, -this.y(d[1]) + (this.props.margins.top / scale)));
 
     this.redraw(false);
 

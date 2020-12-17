@@ -29,7 +29,7 @@ export default class Graph extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (!equal(prevState.size, this.state.size)) {
+    if (!equal(prevState.size, this.state.size) || !equal(prevProps.margins, this.props.margins)) {
       this.initScales();
       this.initAxes();
 

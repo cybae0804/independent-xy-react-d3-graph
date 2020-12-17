@@ -202,7 +202,7 @@ export default class Graph extends React.Component {
     const {
       children, ref, xDomain, yDomain, margins, wrapperElements,
       onXDomainModified, onYDomainModified, onMouseMove,
-      onClick, ...rest,
+      onClick, ...rest
     } = this.props;
 
     return (

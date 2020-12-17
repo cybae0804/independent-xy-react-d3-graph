@@ -32,7 +32,11 @@ export default class Graph extends React.Component {
     if (!equal(prevState.size, this.state.size)) {
       this.initScales();
       this.initAxes();
-      this.initZoom();
+
+      const oldXDomain = (this.xr ?? this.x).domain();
+      const oldYDomain = (this.yr ?? this.y).domain();
+      this.zoomToX(oldXDomain);
+      this.zoomToY(oldYDomain);
     }
 
     if (!equal(prevProps.xDomain, this.props.xDomain) || !equal(prevProps.yDomain, this.props.yDomain)) {
@@ -198,7 +202,7 @@ export default class Graph extends React.Component {
     const {
       children, ref, xDomain, yDomain, margins, wrapperElements,
       onXDomainModified, onYDomainModified, onMouseMove,
-      onClick, ...rest
+      onClick, ...rest,
     } = this.props;
 
     return (

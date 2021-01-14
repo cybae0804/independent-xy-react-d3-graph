@@ -30,12 +30,13 @@ export default class Graph extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     if (!equal(prevState.size, this.state.size) || !equal(prevProps.margins, this.props.margins)) {
+      const oldXDomain = (this.xr ?? this.x).domain();
+      const oldYDomain = (this.yr ?? this.y).domain();
+
       this.initScales();
       this.initAxes();
       this.initZoom();
 
-      const oldXDomain = (this.xr ?? this.x).domain();
-      const oldYDomain = (this.yr ?? this.y).domain();
       this.zoomToX(oldXDomain);
       this.zoomToY(oldYDomain);
     }
@@ -96,7 +97,7 @@ export default class Graph extends React.Component {
     this.zoom = zoom().on('zoom', (e) => {
       const t = e.transform;
       const k = t.k / this.z.k;
-      const point = e.sourceEvent ? pointer(e) : [this.state.size.width / 2, this.state.size.height / 2];
+      const point = e.sourceEvent ? pointer(e, e.sourceEvent.target) : [this.state.size.width / 2, this.state.size.height / 2];
 
       // is it on an axis?
       const doX = point[0] > this.x.range()[0];

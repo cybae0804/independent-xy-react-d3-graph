@@ -76,23 +76,19 @@ export default class Graph extends React.Component {
 
   initZoom() {
     this.z = zoomIdentity;
+    const extents = [
+      [this.props.margins.left, this.props.margins.top],
+      [this.state.size.width - this.props.margins.right, this.state.size.height - this.props.margins.bottom]
+    ];
 
     this.zoomX = zoom()
       .scaleExtent([1, 10])
-      .translateExtent([
-        [this.props.margins.left, this.props.margins.top],
-        [this.state.size.width - this.props.margins.right, this.state.size.height - this.props.margins.bottom]])
-      .extent([
-        [this.props.margins.left, this.props.margins.top],
-        [this.state.size.width - this.props.margins.right, this.state.size.height - this.props.margins.bottom]]);
+      .translateExtent(extents)
+      .extent(extents);
     this.zoomY = zoom()
       .scaleExtent([1, 10])
-      .translateExtent([
-        [this.props.margins.left, this.props.margins.top],
-        [this.state.size.width - this.props.margins.right, this.state.size.height - this.props.margins.bottom]])
-      .extent([
-        [this.props.margins.left, this.props.margins.top],
-        [this.state.size.width - this.props.margins.right, this.state.size.height - this.props.margins.bottom]]);
+      .translateExtent(extents)
+      .extent(extents);
 
     this.zoom = zoom().on('zoom', (e) => {
       const t = e.transform;
@@ -100,8 +96,8 @@ export default class Graph extends React.Component {
       const point = e.sourceEvent ? pointer(e, e.sourceEvent.target) : [this.state.size.width / 2, this.state.size.height / 2];
 
       // is it on an axis?
-      const doX = point[0] > this.x.range()[0];
-      const doY = point[1] < this.y.range()[0];
+      const doX = !this.props.disableXZoom && point[0] > this.x.range()[0];
+      const doY = !this.props.disableYZoom && point[1] < this.y.range()[0];
 
       if (k === 1) {
         // pure translation?

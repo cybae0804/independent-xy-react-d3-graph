@@ -67,11 +67,11 @@ export default class Graph extends React.Component {
   initAxes() {
     this.xAxis = (g, scale) => g
       .attr('transform', `translate(0,${this.y(this.props.yDomain[0])})`)
-      .call(axisBottom(scale));
+      .call(this.props.xAxis ? this.props.xAxis(scale) : axisBottom(scale));
 
     this.yAxis = (g, scale) => g
       .attr('transform', `translate(${this.x(this.props.xDomain[0])},0)`)
-      .call(axisLeft(scale));
+      .call(this.props.yAxis ? this.props.yAxis(scale) : axisLeft(scale));
   }
 
   initZoom() {
@@ -166,7 +166,7 @@ export default class Graph extends React.Component {
       domain[0] < this.props.yDomain[0] ? this.props.yDomain[0] : domain[0],
       domain[1] > this.props.yDomain[1] ? this.props.yDomain[1] : domain[1],
     ];
-
+    
     const scale = (this.state.size.height - this.props.margins.bottom - this.props.margins.top)
       / (this.y(d[0]) - this.y(d[1]));
     this.gy().call(this.zoomY)
@@ -260,8 +260,7 @@ export default class Graph extends React.Component {
             top: 0,
             left: 0,
             pointerEvents: 'none',
-          }}
-          >
+          }}>
             {wrapperElements}
           </div>
         </div>

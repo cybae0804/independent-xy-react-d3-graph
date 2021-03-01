@@ -75,4 +75,6 @@ These functiosn trigger the domain modified callback functions without the `user
 | onYDomainModified | (domain: [number, number], userAction: boolean) => void;     | false    | "                                                                                                                                                                           |
 | disableXZoom | boolean     | false    | disables X axis zooming       |
 | disableYZoom | boolean     | false    | disables Y axis zooming       |
+| xAxis | (scale) => void     | axisBottom(scale)    | receives axis generator function that allows for further customizability such as the axis ticks and formatting       |
+| yAxis | (scale) => void     | axisLeft(scale)    | "       |
 | wrapperElements   | React.Element[]                                              | false    | Elements to be rendered outside of the svg component. Instead, it renders inside an absolutely positioned div, which allows for easier rendering of tooltips, legends, etc. |

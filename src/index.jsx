@@ -135,7 +135,7 @@ export default class Graph extends React.Component {
     const newYDomain = this.yr.domain();
 
     if (!equal(oldXDomain, newXDomain)) this.props.onXDomainModified?.(newXDomain, isUserAction);
-    if (!equal(oldYDomain, newYDomain)) this.props.onYDomainModified?.(newXDomain, isUserAction);
+    if (!equal(oldYDomain, newYDomain)) this.props.onYDomainModified?.(newYDomain, isUserAction);
 
     this.gx().call(this.xAxis, this.xr);
     this.gy().call(this.yAxis, this.yr);
@@ -166,7 +166,7 @@ export default class Graph extends React.Component {
       domain[0] < this.props.yDomain[0] ? this.props.yDomain[0] : domain[0],
       domain[1] > this.props.yDomain[1] ? this.props.yDomain[1] : domain[1],
     ];
-    
+
     const scale = (this.state.size.height - this.props.margins.bottom - this.props.margins.top)
       / (this.y(d[0]) - this.y(d[1]));
     this.gy().call(this.zoomY)
